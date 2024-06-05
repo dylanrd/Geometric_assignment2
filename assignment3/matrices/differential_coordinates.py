@@ -25,7 +25,17 @@ def triangle_gradient(triangle: bmesh.types.BMFace) -> np.ndarray:
     normal = np.array(triangle.normal)
     local_gradient = numpy.zeros([3, 3])
     # TODO: Find the local gradient for this triangle.
-    return local_gradient
+    e_1 = triangle.edges[0]
+    e_2 = triangle.edges[1]
+    e_2 = triangle.edges[3]
+
+    local_gradient[0] = np.cross(normal, e_1)
+    local_gradient[1] = np.cross(normal, e_2)
+    local_gradient[2] = np.cross(normal, e_3)
+    s = (triangle.verts[0] + triangle.verts[1] + triangle.verts[2]) / 2
+    A = (s*(s-triangle.verts[0])*(s-triangle.verts[1])*(s-triangle.verts[2]))**0.5
+
+    return local_gradient / (2 * A)
 
 
 # !!! This function will be used for automatic grading, don't edit the signature !!!
