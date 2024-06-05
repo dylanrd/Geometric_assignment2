@@ -1,0 +1,1 @@
+flatpak run org.blender.Blender --python /home/jcampolattaro/Documents/geometric-data-proc/run.py

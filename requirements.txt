@@ -1,0 +1,4 @@
+numpy
+scipy
+pip
+fake-bpy-module
