@@ -25,14 +25,18 @@ def triangle_gradient(triangle: bmesh.types.BMFace) -> np.ndarray:
     normal = np.array(triangle.normal)
     local_gradient = numpy.zeros([3, 3])
     # TODO: Find the local gradient for this triangle.
-    e_1 = triangle.edges[0]
-    e_2 = triangle.edges[1]
-    e_3 = triangle.edges[2]
+    e_1_length = triangle.edges[0].calc_length()
+    e_2_length = triangle.edges[1].calc_length()
+    e_3_length = triangle.edges[2].calc_length()
 
-    e_1_length = e_1.calc_length()
-    e_2_length = e_2.calc_length()
-    e_3_length = e_3.calc_length()
-
+    # Orientation has to be consistent, does it have to adhere to right hand rule perse?
+    v0 = triangle.verts[0].co
+    v1 = triangle.verts[1].co
+    v2 = triangle.verts[2].co
+    e_1 = v1 - v0
+    e_2 = v2 - v1
+    e_3 = v0 - v2
+    
     local_gradient[:, 0] = np.cross(normal, e_1)
     local_gradient[:, 1] = np.cross(normal, e_2)
     local_gradient[:, 2] = np.cross(normal, e_3)
