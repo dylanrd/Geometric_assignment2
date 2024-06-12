@@ -62,7 +62,17 @@ def build_gradient_matrix(mesh: bmesh.types.BMesh) -> sparray:
     """
     num_faces, num_verts = len(mesh.faces), len(mesh.verts)
     # TODO: construct the sparse gradient matrix for the mesh
-    return coo_array(([], ([], [])), shape=(num_faces * 3, num_verts))
+    gradients, rows, columns = []
+    for face in mesh.faces:
+        local_gradient = triangle_gradient(face)
+        for i in range(len(face.verts)):
+            v = face.verts[i]
+            for j in range(3): #cuz x y z
+                rows.append(face.index * 3 + j)
+                columns.append(v.index)
+                gradients.append(local_gradient[j, i])
+
+    return coo_array(([gradients], ([rows], [columns])), shape=(num_faces * 3, num_verts))
 
 
 # !!! This function will be used for automatic grading, don't edit the signature !!!
