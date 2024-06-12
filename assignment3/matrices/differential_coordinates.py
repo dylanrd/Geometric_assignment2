@@ -27,13 +27,18 @@ def triangle_gradient(triangle: bmesh.types.BMFace) -> np.ndarray:
     # TODO: Find the local gradient for this triangle.
     e_1 = triangle.edges[0]
     e_2 = triangle.edges[1]
-    e_2 = triangle.edges[3]
+    e_3 = triangle.edges[2]
 
-    local_gradient[0] = np.cross(normal, e_1)
-    local_gradient[1] = np.cross(normal, e_2)
-    local_gradient[2] = np.cross(normal, e_3)
-    s = (triangle.verts[0] + triangle.verts[1] + triangle.verts[2]) / 2
-    A = (s*(s-triangle.verts[0])*(s-triangle.verts[1])*(s-triangle.verts[2]))**0.5
+    e_1_length = e_1.calc_length()
+    e_2_length = e_2.calc_length()
+    e_3_length = e_3.calc_length()
+
+    local_gradient[:, 0] = np.cross(normal, e_1)
+    local_gradient[:, 1] = np.cross(normal, e_2)
+    local_gradient[:, 2] = np.cross(normal, e_3)
+    # Following Heron's Formula 
+    s = (e_1_length + e_2_length + e_3_length) / 2 #semi-perimeter
+    A = (s * (s - e_1_length) * (s - e_2_length) * (s - e_3_length))**0.5
 
     return local_gradient / (2 * A)
 
