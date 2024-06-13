@@ -41,8 +41,8 @@ def triangle_gradient(triangle: bmesh.types.BMFace) -> np.ndarray:
     local_gradient[:, 1] = np.cross(normal, e_2)
     local_gradient[:, 2] = np.cross(normal, e_3)
     # Following Heron's Formula
-    s = (e_1_length + e_2_length + e_3_length) / 2 #semi-perimeter
-    A = (s * (s - e_1_length) * (s - e_2_length) * (s - e_3_length))**0.5
+    s = (e_1_length + e_2_length + e_3_length) / 2  # semi-perimeter
+    A = (s * (s - e_1_length) * (s - e_2_length) * (s - e_3_length)) ** 0.5
 
     return local_gradient / (2 * A)
 
@@ -62,17 +62,17 @@ def build_gradient_matrix(mesh: bmesh.types.BMesh) -> sparray:
     """
     num_faces, num_verts = len(mesh.faces), len(mesh.verts)
     # TODO: construct the sparse gradient matrix for the mesh
-    gradients, rows, columns = []
+    gradients, rows, columns = [], [], []
     for face in mesh.faces:
         local_gradient = triangle_gradient(face)
         for i in range(len(face.verts)):
             v = face.verts[i]
-            for j in range(3): #cuz x y z
+            for j in range(3):  # cuz x y z
                 rows.append(face.index * 3 + j)
                 columns.append(v.index)
                 gradients.append(local_gradient[j, i])
 
-    return coo_array(([gradients], ([rows], [columns])), shape=(num_faces * 3, num_verts))
+    return coo_array((gradients, (rows, columns)), shape=(num_faces * 3, num_verts))
 
 
 # !!! This function will be used for automatic grading, don't edit the signature !!!
@@ -95,7 +95,7 @@ def build_mass_matrices(mesh: bmesh.types.BMesh) -> tuple[sparray, sparray]:
     num_faces, num_verts = len(mesh.faces), len(mesh.verts)
     # TODO: construct the mass matrices M and Mv for the mesh
 
-    area_sum, column, row = []
+    area_sum, column, row = [], [], []
 
     for vertex in mesh.verts:
         area = 0
@@ -113,16 +113,15 @@ def build_mass_matrices(mesh: bmesh.types.BMesh) -> tuple[sparray, sparray]:
 
         area_sum.append(area)
 
-
-    area_faces, column2, row2 = []
+    area_faces, column2, row2 = [], [], []
     for face in mesh.faces:
         area = 0
-        column.append(3 * face.index + 0)
-        row.append(3 * face.index + 0)
-        column.append(3 * face.index + 1)
-        row.append(3 * face.index + 1)
-        column.append(3 * face.index + 2)
-        row.append(3 * face.index + 2)
+        column2.append(3 * face.index + 0)
+        row2.append(3 * face.index + 0)
+        column2.append(3 * face.index + 1)
+        row2.append(3 * face.index + 1)
+        column2.append(3 * face.index + 2)
+        row2.append(3 * face.index + 2)
 
         e_1_length = face.edges[0].calc_length()
         e_2_length = face.edges[1].calc_length()
@@ -136,12 +135,10 @@ def build_mass_matrices(mesh: bmesh.types.BMesh) -> tuple[sparray, sparray]:
         area_faces.append(area)
         area_faces.append(area)
 
-
     return (
-        coo_array(([area_sum], ([row], [column])), shape=(num_verts, num_verts)),
-        coo_array(([area_faces], ([row2], [column2])), shape=(3 * num_faces, 3 * num_faces))
+        coo_array((area_sum, (row, column)), shape=(num_verts, num_verts)),
+        coo_array((area_faces, (row2, column2)), shape=(3 * num_faces, 3 * num_faces))
     )
-
 
 
 # !!! This function will be used for automatic grading, don't edit the signature !!!
@@ -155,4 +152,4 @@ def build_cotangent_matrix(G: sparray, Mv: sparray) -> sparray:
     """
     # TODO: find the cotangent matrix S based on G and Mv
     # 𝑆 = 𝐺^T 𝑀v 𝐺
-    return G.T @ Mv @ G # Maybe have to inverse the order still innit
+    return G.T @ Mv @ G  # Maybe have to inverse the order still innit
