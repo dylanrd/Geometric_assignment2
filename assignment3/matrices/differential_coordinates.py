@@ -107,14 +107,6 @@ def build_mass_matrices(mesh: bmesh.types.BMesh) -> tuple[sparray, sparray]:
                 e_2_length = face.edges[1].calc_length()
                 e_3_length = face.edges[2].calc_length()
 
-                # Orientation has to be consistent, does it have to adhere to right hand rule perse?
-                v0 = face.verts[0].co
-                v1 = face.verts[1].co
-                v2 = face.verts[2].co
-                e_1 = v1 - v0
-                e_2 = v2 - v1
-                e_3 = v0 - v2
-
                 # Following Heron's Formula
                 s = (e_1_length + e_2_length + e_3_length) / 2  # semi-perimeter
                 area += (s * (s - e_1_length) * (s - e_2_length) * (s - e_3_length)) ** 0.5
@@ -122,10 +114,32 @@ def build_mass_matrices(mesh: bmesh.types.BMesh) -> tuple[sparray, sparray]:
         area_sum.append(area)
 
 
+    area_faces, column2, row2 = []
+    for face in mesh.faces:
+        area = 0
+        column.append(3 * face.index + 0)
+        row.append(3 * face.index + 0)
+        column.append(3 * face.index + 1)
+        row.append(3 * face.index + 1)
+        column.append(3 * face.index + 2)
+        row.append(3 * face.index + 2)
+
+        e_1_length = face.edges[0].calc_length()
+        e_2_length = face.edges[1].calc_length()
+        e_3_length = face.edges[2].calc_length()
+
+        # Following Heron's Formula
+        s = (e_1_length + e_2_length + e_3_length) / 2  # semi-perimeter
+        area += (s * (s - e_1_length) * (s - e_2_length) * (s - e_3_length)) ** 0.5
+
+        area_faces.append(area)
+        area_faces.append(area)
+        area_faces.append(area)
+
 
     return (
         coo_array(([area_sum], ([row], [column])), shape=(num_verts, num_verts)),
-        coo_array(([], ([], [])), shape=(3 * num_faces, 3 * num_faces))
+        coo_array(([area_faces], ([row2], [column2])), shape=(3 * num_faces, 3 * num_faces))
     )
 
 
