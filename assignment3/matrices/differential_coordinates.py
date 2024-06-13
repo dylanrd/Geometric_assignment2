@@ -36,11 +36,11 @@ def triangle_gradient(triangle: bmesh.types.BMFace) -> np.ndarray:
     e_1 = v1 - v0
     e_2 = v2 - v1
     e_3 = v0 - v2
-    
+
     local_gradient[:, 0] = np.cross(normal, e_1)
     local_gradient[:, 1] = np.cross(normal, e_2)
     local_gradient[:, 2] = np.cross(normal, e_3)
-    # Following Heron's Formula 
+    # Following Heron's Formula
     s = (e_1_length + e_2_length + e_3_length) / 2 #semi-perimeter
     A = (s * (s - e_1_length) * (s - e_2_length) * (s - e_3_length))**0.5
 
@@ -154,4 +154,5 @@ def build_cotangent_matrix(G: sparray, Mv: sparray) -> sparray:
     :return: A 3Mx3M cotangent matrix.
     """
     # TODO: find the cotangent matrix S based on G and Mv
-    return eye_array(num_verts)
+    # 𝑆 = 𝐺^T 𝑀v 𝐺
+    return G.T @ Mv @ G # Maybe have to inverse the order still innit
