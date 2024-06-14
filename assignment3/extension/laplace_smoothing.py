@@ -87,19 +87,7 @@ def explicit_laplace_smooth(
         L: coo_array,
         tau: float,
 ) -> np.ndarray:
-    """
-    Performs smoothing of a list of vertices given a combinatorial Laplace matrix and a weight Tau.
 
-    Updates are computed using the laplacian matrix and then weighted by Tau before subtracting from the vertices.
-
-        x = x - tau * L @ x
-
-    :param vertices: Vertices to apply offsets to as an Nx3 numpy array.
-    :param L: The NxN sparse laplacian matrix
-    :param tau: Update weight, tau=0 leaves the vertices unchanged, and tau=1 applies the full update.
-    :return: The new positions of the vertices as an Nx3 numpy array.
-    """
-    # TODO: Update the vertices using the combinatorial laplacian matrix L
     res = vertices.copy()
 
     vertices2 = L @ vertices
@@ -119,20 +107,6 @@ def iterative_explicit_laplace_smooth(
         selected_vertex_indices: list[int],
         selected_edge_indices: list[int]
 ) -> np.ndarray:
-    """
-    Performs smoothing of a given mesh using the iterative explicit Laplace smoothing.
-
-    First, we define the coordinate vectors and the combinatorial Laplace matrix as numpy arrays.
-    Then, we apply the smoothing operation as many times as iterations.
-    We weight the updating vector in each iteration by tau.
-
-    :param selected_vertex_indices:
-    :param mesh: Mesh to smooth.
-    :param tau: Update weight.
-    :param iterations: Number of smoothing iterations to perform.
-    :return: A mesh with the updated coordinates after smoothing.
-    """
-
 
     # Compute combinatorial Laplace matrix
     L = build_combinatorial_laplacian(mesh, selected_edge_indices, len(selected_vertex_indices))
