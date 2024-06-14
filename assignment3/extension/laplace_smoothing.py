@@ -40,16 +40,38 @@ def adjacency_matrix(mesh: bmesh.types.BMesh, selected_edges_indices: list[int],
 
     row = []
     col = []
+    # for edge in mesh.edges:
+    #     for index in selected_edges_indices:
+    #         if index == edge.index:
+    #             col.append(edge.verts[1].index)
+    #             row.append(edge.verts[0].index)
+    #             col.append(edge.verts[0].index)
+    #             row.append(edge.verts[1].index)
+    #
+    # data = [1] * len(row)
+    # print(selected_edges_indices)
+    # print(data, row, col)
+
+    max_vertex_index = max(max(edge.verts[0].index, edge.verts[1].index) for edge in mesh.edges)
+
+    # Scale all vertex indices to fit within the [0, num_verts) range
+    scaled_num_verts = min(num_verts, max_vertex_index)  # Ensure scaled_num_verts does not exceed num_verts
+    scaling_factor = scaled_num_verts / max_vertex_index
+
     for edge in mesh.edges:
         for index in selected_edges_indices:
             if index == edge.index:
-                col.append(edge.verts[1].index)
-                row.append(edge.verts[0].index)
-                col.append(edge.verts[0].index)
-                row.append(edge.verts[1].index)
+                # Scale the vertex indices to fit within the new range
+                scaled_col = int(edge.verts[1].index * scaling_factor)
+                scaled_row = int(edge.verts[0].index * scaling_factor)
+
+                col.append(scaled_col)
+                row.append(scaled_row)
+                col.append(scaled_row)
+                row.append(scaled_col)
 
     data = [1] * len(row)
-    print(len(data), num_verts)
+    print(row, col)
     return coo_array((data, (row, col)), shape=(num_verts, num_verts))
 
 
@@ -59,23 +81,26 @@ def build_combinatorial_laplacian(mesh: bmesh.types.BMesh, selected_edges_indice
     # TODO: Build the combinatorial laplacian matrix
 
     A = adjacency_matrix(mesh, selected_edges_indices, num_verts)
-    print("WE OUT HERE")
+
     # Convert the COO matrix to a dense matrix
     adjacency_mat = A.toarray()
+    print(A)
+
 
 
     # Calculate the degree of each vertex
     degrees = np.sum(adjacency_mat, axis=1)
-    print("WE OUT HERE")
+
     # Create the degree matrix
-    degree_matrix = diags(degrees)
+    epsilon = 1e-12
+    degree_matrix = diags(degrees + epsilon)
 
     I = eye_array(num_verts)
 
     inv_d = diags(1 / degree_matrix.diagonal())
-    print("WE OUT HERE")
-    res = I - inv_d @ adjacency_mat
-    print("WE OUT HERE")
+
+    res = I - (inv_d @ adjacency_mat)
+
     return res
 
 
@@ -99,6 +124,7 @@ def explicit_laplace_smooth(
     """
     # TODO: Update the vertices using the combinatorial laplacian matrix L
     res = vertices.copy()
+
     vertices2 = L @ vertices
 
     for i, vert in enumerate(vertices):
@@ -149,5 +175,5 @@ def iterative_explicit_laplace_smooth(
 
     # Write smoothed vertices back to output mesh
     # set_verts(mesh, X)
-
+    print("AAAAAAAAAAAAAAAAA")
     return X

@@ -44,7 +44,7 @@ class SelectVerticesNearCursorOperator(bpy.types.Operator):
         # Determine selected faces
         selected_vertex_indices = [f.index for f in mesh.verts if f.select]
         # self.num_selected_faces = len(selected_face_indices)
-        print(len(selected_vertex_indices))
+        # print(len(selected_vertex_indices))
         # Smooth active mesh
         try:
             smoothed_mesh = iterative_explicit_laplace_smooth(
@@ -52,8 +52,17 @@ class SelectVerticesNearCursorOperator(bpy.types.Operator):
                 self.tau,
                 self.iterations, selected_vertex_indices,
                 selected_edges_indices)
+            print(smoothed_mesh)
+            verts = numpy_verts(mesh)
+            print(verts)
+            for i, index in enumerate(selected_vertex_indices):
+                print(smoothed_mesh[i])
+                print(verts[index])
+                verts[index] = smoothed_mesh[i]
 
-            set_verts(mesh, smoothed_mesh)
+            print(smoothed_mesh)
+            print(verts)
+            set_verts(mesh, verts)
             bmesh.update_edit_mesh(active_object.data)
         except Exception as error:
             self.report({'WARNING'}, f"Explicit Laplace Smoothing failed with error '{error}'")
