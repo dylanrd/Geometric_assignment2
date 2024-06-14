@@ -8,12 +8,7 @@ import bmesh
 
 
 def numpy_verts(mesh: bmesh.types.BMesh) -> np.ndarray:
-    """
-    Extracts a numpy array of (x, y, z) vertices from a blender mesh
 
-    :param mesh: The BMesh to extract the vertices of.
-    :return: A numpy array of shape [n, 3], where array[i, :] is the x, y, z coordinate of vertex i.
-    """
     data = bpy.data.meshes.new('tmp')
     mesh.to_mesh(data)
     # Explained here:
@@ -32,26 +27,12 @@ def set_verts(mesh: bmesh.types.BMesh, verts: np.ndarray) -> bmesh.types.BMesh:
     return mesh
 
 
-# HINT: This is a helper method which you can change (for example, if you want to try different sparse formats)
 def adjacency_matrix(mesh: bmesh.types.BMesh, selected_edges_indices: list[int], num_verts: int) -> coo_array:
-    # HINT: Iterating over mesh.edges is significantly faster than iterating over mesh.verts and getting neighbors!
-    #       Building a sparse matrix from a set of I, J, V triplets is also faster than adding elements sequentially.
-    # TODO: Create a sparse adjacency matrix using one of the types from scipy.sparse
 
     row = []
     col = []
-    # for edge in mesh.edges:
-    #     for index in selected_edges_indices:
-    #         if index == edge.index:
-    #             col.append(edge.verts[1].index)
-    #             row.append(edge.verts[0].index)
-    #             col.append(edge.verts[0].index)
-    #             row.append(edge.verts[1].index)
-    #
-    # data = [1] * len(row)
-    # print(selected_edges_indices)
-    # print(data, row, col)
 
+    ## Take into account that there are only a few selected vertices of which its index will exceed the size
     max_vertex_index = max(max(edge.verts[0].index, edge.verts[1].index) for edge in mesh.edges)
 
     # Scale all vertex indices to fit within the [0, num_verts) range
@@ -78,20 +59,16 @@ def adjacency_matrix(mesh: bmesh.types.BMesh, selected_edges_indices: list[int],
 # !!! This function will be used for automatic grading, don't edit the signature !!!
 def build_combinatorial_laplacian(mesh: bmesh.types.BMesh, selected_edges_indices: list[int],
                                   num_verts: int) -> sparray:
-    # TODO: Build the combinatorial laplacian matrix
 
     A = adjacency_matrix(mesh, selected_edges_indices, num_verts)
 
     # Convert the COO matrix to a dense matrix
     adjacency_mat = A.toarray()
-    print(A)
-
-
 
     # Calculate the degree of each vertex
     degrees = np.sum(adjacency_mat, axis=1)
 
-    # Create the degree matrix
+    # Create the degree matrix, use an epsilon as some diagonals might be 0
     epsilon = 1e-12
     degree_matrix = diags(degrees + epsilon)
 
@@ -156,12 +133,11 @@ def iterative_explicit_laplace_smooth(
     :return: A mesh with the updated coordinates after smoothing.
     """
 
-    # Get coordinate vectors as numpy arrays
-    # X = numpy_verts(mesh)
 
     # Compute combinatorial Laplace matrix
     L = build_combinatorial_laplacian(mesh, selected_edge_indices, len(selected_vertex_indices))
 
+    #Select only the vertices that have been selected inside edit mode
     vertices = []
     for index in selected_vertex_indices:
         for verts in mesh.verts:
@@ -173,7 +149,4 @@ def iterative_explicit_laplace_smooth(
     for _ in range(iterations):
         X = explicit_laplace_smooth(X, L, tau)
 
-    # Write smoothed vertices back to output mesh
-    # set_verts(mesh, X)
-    print("AAAAAAAAAAAAAAAAA")
     return X

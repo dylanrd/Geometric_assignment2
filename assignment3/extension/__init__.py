@@ -9,9 +9,10 @@ class SelectVerticesNearCursorOperator(bpy.types.Operator):
     bl_label = "Smooth vertices"
     bl_options = {'REGISTER', 'UNDO'}
 
+    ## Adjust parameters
     tau: bpy.props.FloatProperty(
         name="ε", description="Minimum distance, below which the mesh is considered converged",
-        min=0.0, step=0.01, max=1.0, default=0.15
+        min=-1.0, step=0.01, max=1.0, default=0.15
     )
     iterations: bpy.props.IntProperty(
         name="Iterations", description="Maximum number of iterations",
@@ -40,11 +41,11 @@ class SelectVerticesNearCursorOperator(bpy.types.Operator):
         # self.status = f"Ensuring mesh contains only tris"
         bmesh.ops.triangulate(mesh, faces=mesh.faces)
 
+        ##Selects the edges that are selected
         selected_edges_indices = [f.index for f in mesh.edges if f.select]
-        # Determine selected faces
+        # Selects the vertices that are selected
         selected_vertex_indices = [f.index for f in mesh.verts if f.select]
-        # self.num_selected_faces = len(selected_face_indices)
-        # print(len(selected_vertex_indices))
+
         # Smooth active mesh
         try:
             smoothed_mesh = iterative_explicit_laplace_smooth(
@@ -52,16 +53,14 @@ class SelectVerticesNearCursorOperator(bpy.types.Operator):
                 self.tau,
                 self.iterations, selected_vertex_indices,
                 selected_edges_indices)
-            print(smoothed_mesh)
+
             verts = numpy_verts(mesh)
-            print(verts)
+
+            # Substitute the smoothed selected edges into the vertices of the mesh
             for i, index in enumerate(selected_vertex_indices):
-                print(smoothed_mesh[i])
-                print(verts[index])
+
                 verts[index] = smoothed_mesh[i]
 
-            print(smoothed_mesh)
-            print(verts)
             set_verts(mesh, verts)
             bmesh.update_edit_mesh(active_object.data)
         except Exception as error:
