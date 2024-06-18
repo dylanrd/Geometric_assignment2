@@ -19,7 +19,8 @@ classes = [
     DifferentialCoordinateDeform,
     ConstrainedDifferentialCoordinateDeform,
     # TODO: For task 3, you should add your own Operators, Panels, or other UI elements here!
-    SelectVerticesNearCursorOperator
+    SelectVerticesNearCursorOperator,
+    HoleFillOperator
 ]
 
 
