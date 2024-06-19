@@ -24,11 +24,11 @@ def gradient_deform(mesh: bmesh.types.BMesh, A: mathutils.Matrix) -> np.ndarray:
     """
     verts = numpy_verts(mesh)
     # TODO: Deform the gradients of the mesh and find new vertices.
-    origin_barycenter = np.zeros(3)
-    for vert in verts:
-        origin_barycenter += vert
-    origin_barycenter = origin_barycenter / len(verts)
-    print(origin_barycenter)
+    # initial_barycenter = np.zeros(3)
+    # for vert in verts:
+    #     initial_barycenter += vert
+    # initial_barycenter = initial_barycenter / len(verts)
+    # print("INITIAL", initial_barycenter)
 
 
     G = build_gradient_matrix(mesh)
@@ -71,13 +71,18 @@ def gradient_deform(mesh: bmesh.types.BMesh, A: mathutils.Matrix) -> np.ndarray:
         new_barycenter += np.array([modified_vert_x[i], modified_vert_y[i], modified_vert_z[i]])
     new_barycenter = new_barycenter / len(modified_vert_x)
 
-    translation_barycenter = origin_barycenter - new_barycenter
-    print(translation_barycenter)
+    # print("NEW ", new_barycenter)
 
     res_verts = np.zeros((len(modified_vert_x), 3))
-    res_verts[:, 0] = modified_vert_x + translation_barycenter[0]
-    res_verts[:, 1] = modified_vert_y + translation_barycenter[1]
-    res_verts[:, 2] = modified_vert_z + translation_barycenter[2]
+    res_verts[:, 0] = modified_vert_x - new_barycenter[0]
+    res_verts[:, 1] = modified_vert_y - new_barycenter[1]
+    res_verts[:, 2] = modified_vert_z - new_barycenter[2]
+
+    # after_barycenter = np.zeros(3)
+    # for vert in res_verts:
+    #     after_barycenter += vert
+    # after_barycenter = after_barycenter / len(verts)
+    # print("AFTER", after_barycenter)
 
 
     return res_verts
@@ -104,6 +109,7 @@ def constrained_gradient_deform(
     :return: An Nx3 matrix representing new vertex positions for the mesh.
     """
     verts = numpy_verts(mesh)
+    # print(selected_face_indices)
     # TODO: Deform the gradients of the mesh and find new vertices.
     # origin_barycenter = np.zeros(3)
     # for vert in verts:
@@ -134,7 +140,7 @@ def constrained_gradient_deform(
 
     # print("THIS IS GRADIENT", gradient)
     # print(gradient @ A)
-    epsilon = 1e-12
+    epsilon = 1e-6
     M, Mv = build_mass_matrices(mesh)
     A_solve = build_cotangent_matrix(G, Mv) + (epsilon * M)
     b_x = G.T @ Mv @ modified_gradients[:, 0]
@@ -151,17 +157,22 @@ def constrained_gradient_deform(
     # modified_vert_y = cho_solve((c, low), np.array(b_y))
     # modified_vert_z = cho_solve((c, low), np.array(b_z))
 
-    # new_barycenter = np.zeros(3)
-    # for i in range(len(modified_vert_x)):
-    #     new_barycenter += np.array([modified_vert_x[i], modified_vert_y[i], modified_vert_z[i]])
-    # new_barycenter = new_barycenter / len(modified_vert_x)
+    new_barycenter = np.zeros(3)
+    for i in range(len(modified_vert_x)):
+        new_barycenter += np.array([modified_vert_x[i], modified_vert_y[i], modified_vert_z[i]])
+    new_barycenter = new_barycenter / len(modified_vert_x)
 
-    # translation_barycenter = origin_barycenter - new_barycenter
-    # print(translation_barycenter)
+    # print("NEW ", new_barycenter)
 
     res_verts = np.zeros((len(modified_vert_x), 3))
-    res_verts[:, 0] = modified_vert_x
-    res_verts[:, 1] = modified_vert_y
-    res_verts[:, 2] = modified_vert_z
+    res_verts[:, 0] = modified_vert_x - new_barycenter[0]
+    res_verts[:, 1] = modified_vert_y - new_barycenter[1]
+    res_verts[:, 2] = modified_vert_z - new_barycenter[2]
+
+    # after_barycenter = np.zeros(3)
+    # for vert in res_verts:
+    #     after_barycenter += vert
+    # after_barycenter = after_barycenter / len(verts)
+    # print("AFTER", after_barycenter)
 
     return res_verts
